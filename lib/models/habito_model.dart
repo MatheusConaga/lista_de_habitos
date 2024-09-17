@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 enum Frequencia {
   diario,
   semanal,
-  mensal,
+  mensal, diaria,
 }
 
 class Habito {
@@ -44,4 +44,6 @@ class Habito {
       isActive: json['isActive'] ?? true,
     );
   }
+
+  set concluido(bool concluido) {}
 }

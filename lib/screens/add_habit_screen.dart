@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:monitoramento_de_habitos/models/habit.dart';
-import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:monitoramento_de_habitos/models/habito_model.dart';
 
-class AddHabitScreen extends ConsumerStatefulWidget {
+class AddHabitScreen extends StatefulWidget {
+  const AddHabitScreen({super.key});
+
   @override
   _AddHabitScreenState createState() => _AddHabitScreenState();
 }
 
-class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
-  final TextEditingController _nomeController = TextEditingController();
-  final TextEditingController _descricaoController = TextEditingController();
+class _AddHabitScreenState extends State<AddHabitScreen> {
+  final TextEditingController _nomeInputController = TextEditingController();
+  final TextEditingController _descricaoInputController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   Frequencia _frequenciaSelecionada = Frequencia.diario;
   List<int> _diasSelecionados = [];
-
-  final List<String> _diasSemana = [
-    'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
-  ];
+  final List<String> _diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
           child: Column(
             children: [
               TextFormField(
-                controller: _nomeController,
+                controller: _nomeInputController,
                 decoration: InputDecoration(labelText: 'Nome'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -42,7 +42,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
                 },
               ),
               TextFormField(
-                controller: _descricaoController,
+                controller: _descricaoInputController,
                 decoration: InputDecoration(labelText: 'Descrição'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -72,26 +72,23 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
                 Wrap(
                   spacing: 8.0,
                   children: List<Widget>.generate(7, (index) {
-                    final day = index; // Usar índice diretamente como o dia
                     return ChoiceChip(
                       label: Text(_diasSemana[index]),
-                      selected: _diasSelecionados.contains(day),
+                      selected: _diasSelecionados.contains(index),
                       onSelected: (selected) {
                         setState(() {
                           if (selected) {
-                            if (!_diasSelecionados.contains(day)) {
-                              _diasSelecionados.add(day);
+                            if (!_diasSelecionados.contains(index)) {
+                              _diasSelecionados.add(index);
                             }
                           } else {
-                            _diasSelecionados.remove(day);
+                            _diasSelecionados.remove(index);
                           }
                         });
                       },
                     );
                   }),
                 ),
-                if (_diasSelecionados.isNotEmpty)
-                  Text('Dias selecionados: ${_formatDays(_diasSelecionados)}'),
               ] else if (_frequenciaSelecionada == Frequencia.mensal) ...[
                 ElevatedButton(
                   onPressed: () async {
@@ -104,20 +101,20 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
 
                     if (selectedDate != null) {
                       setState(() {
-                        _diasSelecionados = [selectedDate.day];
+                        _diasSelecionados = [selectedDate.millisecondsSinceEpoch];
                       });
                     }
                   },
                   child: Text('Selecionar Data'),
                 ),
                 if (_diasSelecionados.isNotEmpty)
-                  Text('Data selecionada: ${DateTime.now().copyWith(day: _diasSelecionados.first).toLocal()}'),
+                  Text('Data selecionada: ${DateTime.fromMillisecondsSinceEpoch(_diasSelecionados.first)}'),
               ],
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _addHabit();
+                    _doAdd();
                   }
                 },
                 child: Text('Adicionar Hábito'),
@@ -129,23 +126,57 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
     );
   }
 
-  void _addHabit() {
-    final newHabit = Habit(
-      name: _nomeController.text,
-      descricao: _descricaoController.text,
+  void _doAdd() {
+    Habito newHabito = Habito(
+      name: _nomeInputController.text,
+      descricao: _descricaoInputController.text,
       frequencia: _frequenciaSelecionada,
-      days: List<int>.from(_diasSelecionados),
-      isActive: true,
+      days: _diasSelecionados,
     );
 
-    // Adiciona o novo hábito ao provedor
-    final habitNotifier = ref.read(habitProvider.notifier);
-    habitNotifier.addHabit(newHabit);
+    _saveHabito(newHabito);
 
-    Navigator.pop(context);
+    _nomeInputController.clear();
+    _descricaoInputController.clear();
   }
 
-  String _formatDays(List<int> days) {
-    return days.map((d) => _diasSemana[d]).join(', ');
+  Future<void> _saveHabito(Habito habito) async {
+    final file = await _getLocalFile();
+
+    // Carregar a lista atual de hábitos
+    List<Habito> currentHabitos = await _loadHabitos();
+
+    // Adicionar o novo hábito
+    currentHabitos.add(habito);
+
+    // Converter toda a lista para JSON
+    String jsonString = jsonEncode(currentHabitos.map((h) => h.toJson()).toList());
+
+    // Salvar no arquivo
+    await file.writeAsString(jsonString);
+  }
+
+  Future<List<Habito>> _loadHabitos() async {
+    try {
+      final file = await _getLocalFile();
+      final contents = await file.readAsString();
+
+      // Se o arquivo estiver vazio, retorna uma lista vazia
+      if (contents.isEmpty) {
+        return [];
+      }
+
+      // Converter o JSON para uma lista de hábitos
+      List<dynamic> jsonList = jsonDecode(contents);
+      return jsonList.map((json) => Habito.fromJson(json)).toList();
+    } catch (e) {
+      print('Erro ao carregar hábitos: $e');
+      return [];
+    }
+  }
+
+  Future<File> _getLocalFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return File('${directory.path}/habitos.txt');
   }
 }
