@@ -13,7 +13,10 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
+  flutter_riverpod: ^2.0.0
+  uuid: ^4.5.0
   path_provider: ^2.0.11
+  flutter_local_notifications: ^17.2.2
 
 dev_dependencies:
   flutter_test:

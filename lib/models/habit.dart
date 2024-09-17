@@ -6,21 +6,21 @@ enum Frequencia {
   mensal,
 }
 
-class Habito {
+class Habit {
   String id;
   String name;
   String descricao;
   Frequencia frequencia;
-  List<int> days; // Supondo que os dias da semana são representados como inteiros (0-6)
+  List<int> days;
   bool isActive;
 
-  Habito({
+  Habit({
     required this.name,
     required this.descricao,
     required this.frequencia,
     required this.days,
     this.isActive = true,
-  }) : id = Uuid().v4(); // Gera um ID único para cada hábito
+  }) : id = Uuid().v4(); // Gera um ID único automaticamente
 
   // Converter um hábito para um mapa (para salvar como JSON)
   Map<String, dynamic> toJson() {
@@ -35,8 +35,8 @@ class Habito {
   }
 
   // Criar um hábito a partir de um mapa (carregar de JSON)
-  factory Habito.fromJson(Map<String, dynamic> json) {
-    return Habito(
+  factory Habit.fromJson(Map<String, dynamic> json) {
+    return Habit(
       name: json['name'],
       descricao: json['descricao'],
       frequencia: Frequencia.values.firstWhere((f) => f.name == json['frequencia']),

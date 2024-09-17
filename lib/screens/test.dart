@@ -1,7 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:monitoramento_de_habitos/models/habito_model.dart';
 
 class Test extends StatefulWidget {
@@ -18,7 +18,10 @@ class _TestState extends State<Test> {
   final _formKey = GlobalKey<FormState>();
   Frequencia _frequenciaSelecionada = Frequencia.diario;
 
+  // Para selecionar dias da semana ou uma data específica
+  List<int> _diasSelecionados = [];
   List<Habito> habitos = [];
+  List<String> _diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   @override
   void initState() {
@@ -75,10 +78,56 @@ class _TestState extends State<Test> {
                     onChanged: (Frequencia? novaFrequencia) {
                       setState(() {
                         _frequenciaSelecionada = novaFrequencia!;
+                        _diasSelecionados.clear(); // Limpar dias selecionados ao mudar a frequência
                       });
                     },
                     decoration: InputDecoration(labelText: 'Frequência'),
                   ),
+                  _frequenciaSelecionada == Frequencia.semanal
+                      ? Wrap(
+                    spacing: 8.0,
+                    children: List<Widget>.generate(7, (int index) {
+                      return ChoiceChip(
+                        label: Text(_diasSemana[index]),
+                        selected: _diasSelecionados.contains(index),
+                        onSelected: (bool selected) {
+                          setState(() {
+                            if (selected) {
+                              _diasSelecionados.add(index);
+                            } else {
+                              _diasSelecionados.remove(index);
+                            }
+                          });
+                        },
+                      );
+                    }),
+                  )
+                      : Container(),
+                  _frequenciaSelecionada == Frequencia.mensal
+                      ? Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          DateTime? selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now().subtract(Duration(days: 365)),
+                            lastDate: DateTime.now().add(Duration(days: 365)),
+                          );
+
+                          if (selectedDate != null) {
+                            setState(() {
+                              _diasSelecionados = [selectedDate.millisecondsSinceEpoch];
+                            });
+                          }
+                        },
+                        child: Text('Selecionar Data'),
+                      ),
+                      if (_diasSelecionados.isNotEmpty)
+                        Text('Data selecionada: ${DateTime.fromMillisecondsSinceEpoch(_diasSelecionados.first)}'),
+                    ],
+                  )
+                      : Container(),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -96,9 +145,15 @@ class _TestState extends State<Test> {
                 itemCount: habitos.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(habitos[index].nome),
+                    title: Text(habitos[index].name),
                     subtitle: Text(
                       'Descrição: ${habitos[index].descricao}\nFrequência: ${habitos[index].frequencia.name}',
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        _deleteHabito(index);
+                      },
                     ),
                   );
                 },
@@ -112,9 +167,10 @@ class _TestState extends State<Test> {
 
   void _doAdd() {
     Habito newHabito = Habito(
-      nome: _nomeInputController.text,
+      name: _nomeInputController.text,
       descricao: _descricaoInputController.text,
       frequencia: _frequenciaSelecionada,
+      days: _diasSelecionados,
     );
 
     setState(() {
@@ -167,4 +223,22 @@ class _TestState extends State<Test> {
     return File('${directory.path}/habitos.txt');
   }
 
+  void _deleteHabito(int index) async {
+    setState(() {
+      habitos.removeAt(index);
+    });
+
+    // Atualiza o armazenamento local
+    _saveAllHabitos();
+  }
+
+  Future<void> _saveAllHabitos() async {
+    final file = await _getLocalFile();
+
+    // Converter a lista atual para JSON
+    String jsonString = jsonEncode(habitos.map((h) => h.toJson()).toList());
+
+    // Salvar no arquivo
+    await file.writeAsString(jsonString);
+  }
 }
