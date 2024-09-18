@@ -1,98 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:monitoramento_de_habitos/models/habito_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monitoramento_de_habitos/models/habit.dart';
+import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
 
-class SemanalScreen extends StatefulWidget {
+class SemanalScreen extends ConsumerWidget {
   const SemanalScreen({super.key});
 
   @override
-  _SemanalScreenState createState() => _SemanalScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final habitosSemanais = ref.watch(habitProvider).where((habit) => habit.frequencia == Frequencia.semanal).toList();
 
-class _SemanalScreenState extends State<SemanalScreen> {
-  List<Habito> habitos = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadHabitos().then((loadedHabitos) {
-      setState(() {
-        habitos = loadedHabitos;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lista de Hábitos Semanais'),
+        title: Text('Hábitos Semanais'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: habitos.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(habitos[index].name),
-              subtitle: Text(
-                'Descrição: ${habitos[index].descricao}\nFrequência: ${habitos[index].frequencia.name}',
-              ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  _deleteHabito(index);
-                },
-              ),
-            );
-          },
-        ),
+      body: habitosSemanais.isEmpty
+          ? Center(child: Text('Nenhum hábito semanal encontrado.'))
+          : ListView.builder(
+        itemCount: habitosSemanais.length,
+        itemBuilder: (context, index) {
+          final habit = habitosSemanais[index];
+          return ListTile(
+            leading: IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                ref.read(habitProvider.notifier).removeHabit(habit); // Remove o hábito
+              },
+            ),
+            title: Text(habit.name),
+            subtitle: Text('${habit.descricao}\nDias da semana: ${habit.days.join(', ')}\nDias completados: ${habit.completedDays.join(', ')}'), // Mostra os dias completados
+            trailing: Checkbox(
+              value: habit.isCompleted,
+              onChanged: (bool? value) {
+                if (value != null) {
+                  // Atualize o estado com base na marcação
+                  ref.read(habitProvider.notifier).markHabitAsCompleted(
+                      habit.copyWith(
+                        isCompleted: value,
+                        completedDays: value ? [...habit.completedDays, DateTime.now().day] : habit.completedDays,
+                      )
+                  );
+                }
+              },
+            ),
+          );
+        },
       ),
     );
-  }
-
-  void _deleteHabito(int index) async {
-    setState(() {
-      habitos.removeAt(index);
-    });
-
-    // Atualiza o armazenamento local
-    _saveAllHabitos();
-  }
-
-  Future<void> _saveAllHabitos() async {
-    final file = await _getLocalFile();
-
-    // Converter a lista atual para JSON
-    String jsonString = jsonEncode(habitos.map((h) => h.toJson()).toList());
-
-    // Salvar no arquivo
-    await file.writeAsString(jsonString);
-  }
-
-  Future<List<Habito>> _loadHabitos() async {
-    try {
-      final file = await _getLocalFile();
-      final contents = await file.readAsString();
-
-      // Se o arquivo estiver vazio, retorna uma lista vazia
-      if (contents.isEmpty) {
-        return [];
-      }
-
-      // Converter o JSON para uma lista de hábitos
-      List<dynamic> jsonList = jsonDecode(contents);
-      return jsonList.map((json) => Habito.fromJson(json)).toList();
-    } catch (e) {
-      print('Erro ao carregar hábitos: $e');
-      return [];
-    }
-  }
-
-  Future<File> _getLocalFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/habitos.txt');
   }
 }

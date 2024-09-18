@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:monitoramento_de_habitos/models/habito_model.dart';
+import 'package:monitoramento_de_habitos/models/habit.dart';
 
 class HabitDetailScreen extends StatelessWidget {
-  final Habito habito;
+  final Habit habito;
 
   const HabitDetailScreen({super.key, required this.habito});
 
