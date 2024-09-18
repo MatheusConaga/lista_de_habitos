@@ -18,6 +18,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
   Frequencia _frequencia = Frequencia.diario;
   late List<int> _days;
   bool _isCompleted = false;
+  DateTime? _selectedDate;  // Variável para armazenar a data selecionada
 
   @override
   void initState() {
@@ -84,6 +85,12 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
               onChanged: (Frequencia? newValue) {
                 setState(() {
                   _frequencia = newValue!;
+                  _days.clear();  // Limpa os dias ao mudar a frequência
+
+                  // Se a frequência for mensal, limpar a data anterior
+                  if (_frequencia != Frequencia.mensal) {
+                    _selectedDate = null;
+                  }
                 });
               },
               items: Frequencia.values.map((Frequencia freq) {
@@ -93,10 +100,78 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
                 );
               }).toList(),
             ),
-            // Adicione outros widgets para seleção de dias e conclusão, se necessário.
+            if (_frequencia == Frequencia.semanal) ...[
+              Text('Selecione os dias da semana:'),
+              ..._buildDayCheckboxes(),
+            ] else if (_frequencia == Frequencia.mensal) ...[
+              Text('Selecione uma data:'),
+              Row(
+                children: [
+                  Text(_selectedDate == null
+                      ? 'Nenhuma data selecionada'
+                      : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
+                  IconButton(
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          _selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildDayCheckboxes() {
+    return List.generate(7, (index) {
+      final day = index + 1;
+      return CheckboxListTile(
+        title: Text(_getDayName(day)),
+        value: _days.contains(day),
+        onChanged: (bool? value) {
+          setState(() {
+            if (value == true) {
+              _days.add(day);
+            } else {
+              _days.remove(day);
+            };
+          });
+        },
+      );
+    });
+  }
+
+  String _getDayName(int day) {
+    switch (day) {
+      case 1:
+        return 'Segunda-feira';
+      case 2:
+        return 'Terça-feira';
+      case 3:
+        return 'Quarta-feira';
+      case 4:
+        return 'Quinta-feira';
+      case 5:
+        return 'Sexta-feira';
+      case 6:
+        return 'Sábado';
+      case 7:
+        return 'Domingo';
+      default:
+        return '';
+    }
   }
 }
