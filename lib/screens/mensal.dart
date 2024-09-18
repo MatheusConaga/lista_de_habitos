@@ -15,6 +15,19 @@ class MensalScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Hábitos Mensais'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddHabitScreen(), // Navega para a tela de adicionar
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: habitosMensais.isEmpty
           ? Center(child: Text('Nenhum hábito mensal encontrado.'))
