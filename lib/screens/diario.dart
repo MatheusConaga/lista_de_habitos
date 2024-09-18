@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:monitoramento_de_habitos/models/habit.dart';
 import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
-import 'package:monitoramento_de_habitos/screens/add_habit_screen.dart'; // Importe a tela de adicionar/editar hábito
-import 'package:monitoramento_de_habitos/screens/habitDetailScreen.dart'; // Importe a tela de detalhes
+import 'package:monitoramento_de_habitos/screens/add_habit_screen.dart';
+import 'package:monitoramento_de_habitos/screens/habitDetailScreen.dart';
 
 class DiarioScreen extends ConsumerWidget {
   const DiarioScreen({super.key});
@@ -22,9 +22,12 @@ class DiarioScreen extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddHabitScreen(), // Navega para a tela de adicionar
+                  builder: (context) => AddHabitScreen(),
                 ),
-              );
+              ).then((_) {
+                // Atualiza a lista de hábitos após voltar da tela de adicionar/editar
+                ref.refresh(habitProvider);
+              });
             },
           ),
         ],
@@ -39,54 +42,46 @@ class DiarioScreen extends ConsumerWidget {
             leading: IconButton(
               icon: Icon(Icons.delete, color: Colors.red),
               onPressed: () {
-                ref.read(habitProvider.notifier).removeHabit(habit); // Remove o hábito
+                ref.read(habitProvider.notifier).removeHabit(habit.id);
               },
             ),
             title: Text(habit.name),
             subtitle: Text(
-                '${habit.descricao}\nDias completados: ${habit.completedDays.join(', ')}'
-            ), // Mostra os dias completados
+                '${habit.descricao}\nDias completados: ${habit.completedDays.join(', ')}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: Icon(Icons.edit, color: Colors.blue),
                   onPressed: () {
-                    // Navega para a tela de adicionar/editar hábito
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => AddHabitScreen(
-                          habit: habit, // Passa o hábito para a tela de adicionar/editar
+                          habit: habit,
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      ref.refresh(habitProvider);
+                    });
                   },
                 ),
                 Checkbox(
                   value: habit.isCompleted,
                   onChanged: (bool? value) {
                     if (value != null) {
-                      final now = DateTime.now().day; // Dia atual
-                      ref.read(habitProvider.notifier).markHabitAsCompleted(
-                        habit.copyWith(
-                          isCompleted: value,
-                          completedDays: value
-                              ? [...habit.completedDays, now] // Adiciona o dia atual se o hábito estiver completo
-                              : habit.completedDays.where((day) => day != now).toList(), // Remove o dia atual se o hábito não estiver completo
-                        ),
-                      );
+                      final now = DateTime.now().day;
+                      ref.read(habitProvider.notifier).toggleHabitCompletion(habit.id);
                     }
                   },
                 ),
               ],
             ),
             onTap: () {
-              // Navega para a tela de detalhes do hábito
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HabitDetailScreen(habito: habit), // Passa o hábito para a tela de detalhes
+                  builder: (context) => HabitDetailScreen(habito: habit),
                 ),
               );
             },

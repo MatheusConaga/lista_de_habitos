@@ -10,11 +10,25 @@ class MensalScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Obtém a lista de hábitos com frequência mensal
     final habitosMensais = ref.watch(habitProvider).where((habit) => habit.frequencia == Frequencia.mensal).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Hábitos Mensais'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddHabitScreen(), // Navega para a tela de adicionar
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: habitosMensais.isEmpty
           ? Center(child: Text('Nenhum hábito mensal encontrado.'))
@@ -26,12 +40,12 @@ class MensalScreen extends ConsumerWidget {
             leading: IconButton(
               icon: Icon(Icons.delete, color: Colors.red),
               onPressed: () {
-                ref.read(habitProvider.notifier).removeHabit(habit); // Remove o hábito
+                ref.read(habitProvider.notifier).removeHabit(habit.id); // Remove o hábito usando o ID
               },
             ),
             title: Text(habit.name),
             subtitle: Text(
-                '${habit.descricao}\nDias do mês: ${habit.days.join(', ')}\nDias completados: ${habit.completedDays.join(', ')}'
+                '${habit.descricao}\nDias completados: ${habit.completedDays.join(', ')}'
             ), // Mostra os dias completados
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -47,22 +61,17 @@ class MensalScreen extends ConsumerWidget {
                           habit: habit, // Passa o hábito para a tela de adicionar/editar
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      // Atualiza a tela após a edição do hábito
+                      ref.refresh(habitProvider);
+                    });
                   },
                 ),
                 Checkbox(
                   value: habit.isCompleted,
                   onChanged: (bool? value) {
                     if (value != null) {
-                      final now = DateTime.now().day;
-                      ref.read(habitProvider.notifier).markHabitAsCompleted(
-                        habit.copyWith(
-                          isCompleted: value,
-                          completedDays: value
-                              ? [...habit.completedDays, now] // Adiciona o dia atual se o hábito estiver completo
-                              : habit.completedDays.where((day) => day != now).toList(), // Remove o dia atual se o hábito não estiver completo
-                        ),
-                      );
+                      ref.read(habitProvider.notifier).toggleHabitCompletion(habit.id); // Usa o ID do hábito
                     }
                   },
                 ),

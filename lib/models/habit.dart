@@ -19,10 +19,36 @@ class Habit {
     required this.days,
     this.completedDays = const [],
     this.isCompleted = false,
-  }) : id = id ?? Uuid().v4(); // Se o id não for passado, gera um novo ID.
+  }) : id = id ?? Uuid().v4();
 
+  // Conversão para JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'descricao': descricao,
+      'frequencia': frequencia.index,
+      'days': days,
+      'completedDays': completedDays,
+      'isCompleted': isCompleted,
+    };
+  }
+
+  // Conversão de JSON
+  static Habit fromJson(Map<String, dynamic> json) {
+    return Habit(
+      id: json['id'],
+      name: json['name'],
+      descricao: json['descricao'],
+      frequencia: Frequencia.values[json['frequencia']],
+      days: List<int>.from(json['days']),
+      completedDays: List<int>.from(json['completedDays']),
+      isCompleted: json['isCompleted'],
+    );
+  }
+
+  // Método copyWith
   Habit copyWith({
-    String? id,
     String? name,
     String? descricao,
     Frequencia? frequencia,
@@ -31,7 +57,7 @@ class Habit {
     bool? isCompleted,
   }) {
     return Habit(
-      id: id ?? this.id,
+      id: this.id,
       name: name ?? this.name,
       descricao: descricao ?? this.descricao,
       frequencia: frequencia ?? this.frequencia,

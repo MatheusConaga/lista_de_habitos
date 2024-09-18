@@ -1,31 +1,24 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:monitoramento_de_habitos/models/habit.dart';
-import 'package:path_provider/path_provider.dart';
 
-class StorageUtils {
-  Future<File> _getLocalFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-    return File('${directory.path}/habits.json');
-  }
+class StorageService {
+  static const String habitKey = 'habits_key';
 
+  // Salvar lista de hábitos
   Future<void> saveHabits(List<Habit> habits) async {
-    final file = await _getLocalFile();
-    String jsonString = jsonEncode(habits.map((h) => h.toJson()).toList());
-    await file.writeAsString(jsonString);
+    final prefs = await SharedPreferences.getInstance();
+    List<String> encodedHabits = habits.map((habit) => jsonEncode(habit.toJson())).toList();
+    await prefs.setStringList(habitKey, encodedHabits);
   }
 
+  // Carregar lista de hábitos
   Future<List<Habit>> loadHabits() async {
-    try {
-      final file = await _getLocalFile();
-      final contents = await file.readAsString();
-      if (contents.isEmpty) return [];
-      List<dynamic> jsonList = jsonDecode(contents);
-      return jsonList.map((json) => Habit.fromJson(json)).toList();
-    } catch (e) {
-      print('Error loading habits: $e');
-      return [];
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? encodedHabits = prefs.getStringList(habitKey);
+    if (encodedHabits != null) {
+      return encodedHabits.map((habitStr) => Habit.fromJson(jsonDecode(habitStr))).toList();
     }
+    return [];
   }
 }

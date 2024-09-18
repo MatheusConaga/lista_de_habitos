@@ -4,27 +4,34 @@ import 'package:monitoramento_de_habitos/models/habit.dart';
 import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
 
 class AddHabitScreen extends ConsumerStatefulWidget {
-  final Habit? habit; // Adiciona o parâmetro habit opcional
+  final Habit? habit;
 
-  const AddHabitScreen({super.key, this.habit}); // Inicializa o parâmetro habit
+  const AddHabitScreen({Key? key, this.habit}) : super(key: key);
 
   @override
-  _AddHabitScreenState createState() => _AddHabitScreenState();
+  ConsumerState<AddHabitScreen> createState() => _AddHabitScreenState();
 }
 
 class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
-  final TextEditingController _nomeInputController = TextEditingController();
-  final TextEditingController _descricaoInputController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  Frequencia _frequenciaSelecionada = Frequencia.diario;
+  late TextEditingController _nameController;
+  late TextEditingController _descricaoController;
+  Frequencia _frequencia = Frequencia.diario;
+  late List<int> _days;
+  bool _isCompleted = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.habit != null) {
-      _nomeInputController.text = widget.habit!.name;
-      _descricaoInputController.text = widget.habit!.descricao;
-      _frequenciaSelecionada = widget.habit!.frequencia;
+      _nameController = TextEditingController(text: widget.habit!.name);
+      _descricaoController = TextEditingController(text: widget.habit!.descricao);
+      _frequencia = widget.habit!.frequencia;
+      _days = widget.habit!.days;
+      _isCompleted = widget.habit!.isCompleted;
+    } else {
+      _nameController = TextEditingController();
+      _descricaoController = TextEditingController();
+      _days = [];
     }
   }
 
@@ -33,87 +40,63 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.habit == null ? 'Adicionar Hábito' : 'Editar Hábito'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.save),
+            onPressed: () {
+              final habit = Habit(
+                id: widget.habit?.id,
+                name: _nameController.text,
+                descricao: _descricaoController.text,
+                frequencia: _frequencia,
+                days: _days,
+                completedDays: widget.habit?.completedDays ?? [],
+                isCompleted: _isCompleted,
+              );
+
+              if (widget.habit == null) {
+                ref.read(habitProvider.notifier).addHabit(habit);
+              } else {
+                ref.read(habitProvider.notifier).removeHabit(widget.habit!.id);
+                ref.read(habitProvider.notifier).addHabit(habit);
+              }
+
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nomeInputController,
-                decoration: InputDecoration(labelText: 'Nome'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira um nome';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _descricaoInputController,
-                decoration: InputDecoration(labelText: 'Descrição'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira uma descrição';
-                  }
-                  return null;
-                },
-              ),
-              DropdownButtonFormField<Frequencia>(
-                value: _frequenciaSelecionada,
-                items: Frequencia.values.map((frequencia) {
-                  return DropdownMenuItem<Frequencia>(
-                    value: frequencia,
-                    child: Text(frequencia.name),
-                  );
-                }).toList(),
-                onChanged: (Frequencia? novaFrequencia) {
-                  setState(() {
-                    _frequenciaSelecionada = novaFrequencia!;
-                  });
-                },
-                decoration: InputDecoration(labelText: 'Frequência'),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (widget.habit == null) {
-                      _doAdd();
-                    } else {
-                      _doUpdate();
-                    }
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text(widget.habit == null ? 'Adicionar Hábito' : 'Atualizar Hábito'),
-              ),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Nome'),
+            ),
+            TextField(
+              controller: _descricaoController,
+              decoration: InputDecoration(labelText: 'Descrição'),
+            ),
+            DropdownButton<Frequencia>(
+              value: _frequencia,
+              onChanged: (Frequencia? newValue) {
+                setState(() {
+                  _frequencia = newValue!;
+                });
+              },
+              items: Frequencia.values.map((Frequencia freq) {
+                return DropdownMenuItem<Frequencia>(
+                  value: freq,
+                  child: Text(freq.toString().split('.').last),
+                );
+              }).toList(),
+            ),
+            // Adicione outros widgets para seleção de dias e conclusão, se necessário.
+          ],
         ),
       ),
     );
-  }
-
-  void _doAdd() {
-    Habit newHabit = Habit(
-      name: _nomeInputController.text,
-      descricao: _descricaoInputController.text,
-      frequencia: _frequenciaSelecionada,
-      days: [],
-    );
-    ref.read(habitProvider.notifier).addHabit(newHabit);
-  }
-
-  void _doUpdate() {
-    if (widget.habit != null) {
-      Habit updatedHabit = widget.habit!.copyWith(
-        name: _nomeInputController.text,
-        descricao: _descricaoInputController.text,
-        frequencia: _frequenciaSelecionada,
-      );
-      ref.read(habitProvider.notifier).updateHabit(updatedHabit);
-    }
   }
 }

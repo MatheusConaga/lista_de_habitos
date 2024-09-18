@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monitoramento_de_habitos/models/habit.dart'; // Certifique-se de que este caminho está correto
+import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
 import 'package:monitoramento_de_habitos/screens/semanal.dart';
 import 'package:monitoramento_de_habitos/screens/mensal.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:monitoramento_de_habitos/screens/add_habit_screen.dart';
 import 'package:monitoramento_de_habitos/screens/diario.dart';
-import 'package:monitoramento_de_habitos/providers/habit_provider.dart'; // Import do provedor
-import 'package:monitoramento_de_habitos/models/habit.dart'; // Importa o modelo Habit e Frequencia
 
 class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habits = ref.watch(habitProvider);
-
-    // Calcular o progresso para Diário, Semanal e Mensal
     final progressoDiario = _calcularProgresso(habits, Frequencia.diario);
     final progressoSemanal = _calcularProgresso(habits, Frequencia.semanal);
     final progressoMensal = _calcularProgresso(habits, Frequencia.mensal);
@@ -38,7 +36,6 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navegar para a tela de adicionar hábito
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddHabitScreen()),
@@ -50,16 +47,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Função para calcular o progresso dos hábitos
   double _calcularProgresso(List<Habit> habits, Frequencia frequencia) {
     final totalHabits = habits.where((habit) => habit.frequencia == frequencia).toList();
     if (totalHabits.isEmpty) return 0.0;
-
     final completedHabits = totalHabits.where((habit) => habit.isCompleted).length;
     return completedHabits / totalHabits.length;
   }
 
-  // Função para criar um Card com título e barra de progresso circular
   Widget _buildHabitCard(BuildContext context, String title, double percent) {
     return Card(
       shape: RoundedRectangleBorder(
@@ -69,19 +63,16 @@ class HomeScreen extends ConsumerWidget {
       child: InkWell(
         onTap: () {
           if (title == 'Diário') {
-            // Navegar para a tela Diário ao clicar em "Diário"
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => DiarioScreen()),
             );
           } else if (title == 'Semanal') {
-            // Navegar para a tela Semanal ao clicar em "Semanal"
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => SemanalScreen()),
             );
           } else if (title == 'Mensal') {
-            // Navegar para a tela Mensal ao clicar em "Mensal"
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => MensalScreen()),
@@ -101,16 +92,16 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               CircularPercentIndicator(
-                radius: 60.0, // Tamanho do círculo
-                lineWidth: 8.0, // Largura da barra
-                percent: percent, // Percentual de progresso
+                radius: 60.0,
+                lineWidth: 8.0,
+                percent: percent,
                 center: Text(
-                  '${(percent * 100).toInt()}%', // Exibe o percentual
+                  '${(percent * 100).toInt()}%',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                progressColor: Colors.green, // Cor da barra de progresso
-                backgroundColor: Colors.grey.shade300, // Cor do fundo da barra
-                circularStrokeCap: CircularStrokeCap.round, // Estilo da barra
+                progressColor: Colors.green,
+                backgroundColor: Colors.grey.shade300,
+                circularStrokeCap: CircularStrokeCap.round,
               ),
             ],
           ),
