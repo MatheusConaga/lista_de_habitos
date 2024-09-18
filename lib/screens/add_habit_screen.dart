@@ -4,7 +4,9 @@ import 'package:monitoramento_de_habitos/models/habit.dart';
 import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
 
 class AddHabitScreen extends ConsumerStatefulWidget {
-  const AddHabitScreen({super.key});
+  final Habit? habit; // Adiciona o parâmetro habit opcional
+
+  const AddHabitScreen({super.key, this.habit}); // Inicializa o parâmetro habit
 
   @override
   _AddHabitScreenState createState() => _AddHabitScreenState();
@@ -17,10 +19,20 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
   Frequencia _frequenciaSelecionada = Frequencia.diario;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.habit != null) {
+      _nomeInputController.text = widget.habit!.name;
+      _descricaoInputController.text = widget.habit!.descricao;
+      _frequenciaSelecionada = widget.habit!.frequencia;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Adicionar Hábito'),
+        title: Text(widget.habit == null ? 'Adicionar Hábito' : 'Editar Hábito'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -67,11 +79,15 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _doAdd();
+                    if (widget.habit == null) {
+                      _doAdd();
+                    } else {
+                      _doUpdate();
+                    }
                     Navigator.pop(context);
                   }
                 },
-                child: Text('Adicionar Hábito'),
+                child: Text(widget.habit == null ? 'Adicionar Hábito' : 'Atualizar Hábito'),
               ),
             ],
           ),
@@ -85,9 +101,19 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
       name: _nomeInputController.text,
       descricao: _descricaoInputController.text,
       frequencia: _frequenciaSelecionada,
-      days: [], // Dependendo da implementação, você pode adicionar dias específicos aqui
+      days: [],
     );
-
     ref.read(habitProvider.notifier).addHabit(newHabit);
+  }
+
+  void _doUpdate() {
+    if (widget.habit != null) {
+      Habit updatedHabit = widget.habit!.copyWith(
+        name: _nomeInputController.text,
+        descricao: _descricaoInputController.text,
+        frequencia: _frequenciaSelecionada,
+      );
+      ref.read(habitProvider.notifier).updateHabit(updatedHabit);
+    }
   }
 }
