@@ -40,10 +40,11 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.habit == null ? 'Adicionar Hábito' : 'Editar Hábito'),
+        title: Text(widget.habit == null ? 'Adicionar Hábito' : 'Editar Hábito', style: TextStyle(color: Colors.white)), // Cor do título da AppBar
+        backgroundColor: Colors.blue, // Cor de fundo da AppBar
         actions: [
           IconButton(
-            icon: Icon(Icons.save),
+            icon: Icon(Icons.save, color: Colors.white), // Cor do ícone na AppBar
             onPressed: () {
               final habit = Habit(
                 id: widget.habit?.id,
@@ -67,6 +68,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
           ),
         ],
       ),
+      backgroundColor: Colors.blue, // Cor de fundo do Scaffold
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -74,11 +76,31 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Nome'),
+              decoration: InputDecoration(
+                labelText: 'Nome',
+                labelStyle: TextStyle(color: Colors.white), // Cor do texto do label
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Cor da linha inferior quando o campo está focado
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Cor da linha inferior do campo
+                ),
+              ),
+              style: TextStyle(color: Colors.white), // Cor do texto do campo
             ),
             TextField(
               controller: _descricaoController,
-              decoration: InputDecoration(labelText: 'Descrição'),
+              decoration: InputDecoration(
+                labelText: 'Descrição',
+                labelStyle: TextStyle(color: Colors.white), // Cor do texto do label
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Cor da linha inferior quando o campo está focado
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white), // Cor da linha inferior do campo
+                ),
+              ),
+              style: TextStyle(color: Colors.white), // Cor do texto do campo
             ),
             DropdownButton<Frequencia>(
               value: _frequencia,
@@ -93,6 +115,8 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
                   }
                 });
               },
+              dropdownColor: Colors.blue, // Cor de fundo do DropdownButton
+              style: TextStyle(color: Colors.white), // Cor do texto do DropdownButton
               items: Frequencia.values.map((Frequencia freq) {
                 return DropdownMenuItem<Frequencia>(
                   value: freq,
@@ -101,17 +125,20 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
               }).toList(),
             ),
             if (_frequencia == Frequencia.semanal) ...[
-              Text('Selecione os dias da semana:'),
+              Text('Selecione os dias da semana:', style: TextStyle(color: Colors.white)), // Cor do texto
               ..._buildDayCheckboxes(),
             ] else if (_frequencia == Frequencia.mensal) ...[
-              Text('Selecione uma data:'),
+              Text('Selecione uma data:', style: TextStyle(color: Colors.white)), // Cor do texto
               Row(
                 children: [
-                  Text(_selectedDate == null
-                      ? 'Nenhuma data selecionada'
-                      : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
+                  Text(
+                    _selectedDate == null
+                        ? 'Nenhuma data selecionada'
+                        : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                    style: TextStyle(color: Colors.white), // Cor do texto
+                  ),
                   IconButton(
-                    icon: Icon(Icons.calendar_today),
+                    icon: Icon(Icons.calendar_today, color: Colors.white), // Cor do ícone
                     onPressed: () async {
                       DateTime? pickedDate = await showDatePicker(
                         context: context,
@@ -139,7 +166,7 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
     return List.generate(7, (index) {
       final day = index + 1;
       return CheckboxListTile(
-        title: Text(_getDayName(day)),
+        title: Text(_getDayName(day), style: TextStyle(color: Colors.white)), // Cor do texto
         value: _days.contains(day),
         onChanged: (bool? value) {
           setState(() {
@@ -150,6 +177,8 @@ class _AddHabitScreenState extends ConsumerState<AddHabitScreen> {
             };
           });
         },
+        activeColor: Colors.blue, // Cor do Checkbox quando ativo
+        checkColor: Colors.white, // Cor do ícone de check
       );
     });
   }

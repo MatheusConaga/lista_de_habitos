@@ -13,11 +13,13 @@ class DiarioScreen extends ConsumerWidget {
     final habitosDiarios = ref.watch(habitProvider).where((habit) => habit.frequencia == Frequencia.diario).toList();
 
     return Scaffold(
+      backgroundColor: Colors.blue, // Cor de fundo da tela
       appBar: AppBar(
-        title: Text('Hábitos Diários'),
+        title: Text('Hábitos Diários', style: TextStyle(color: Colors.white)), // Cor do título da AppBar
+        backgroundColor: Colors.blue, // Cor de fundo da AppBar
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.add, color: Colors.white), // Cor do ícone na AppBar
             onPressed: () {
               Navigator.push(
                 context,
@@ -33,26 +35,36 @@ class DiarioScreen extends ConsumerWidget {
         ],
       ),
       body: habitosDiarios.isEmpty
-          ? Center(child: Text('Nenhum hábito diário encontrado.'))
+          ? Center(
+        child: Text(
+          'Nenhum hábito diário encontrado.',
+          style: TextStyle(color: Colors.white), // Cor do texto quando não há hábitos
+        ),
+      )
           : ListView.builder(
         itemCount: habitosDiarios.length,
         itemBuilder: (context, index) {
           final habit = habitosDiarios[index];
           return ListTile(
             leading: IconButton(
-              icon: Icon(Icons.delete, color: Colors.red),
+              icon: Icon(Icons.delete, color: Colors.red), // Cor do ícone de deletar
               onPressed: () {
                 ref.read(habitProvider.notifier).removeHabit(habit.id);
               },
             ),
-            title: Text(habit.name),
+            title: Text(
+              habit.name,
+              style: TextStyle(color: Colors.white), // Cor do título do hábito
+            ),
             subtitle: Text(
-                '${habit.descricao}\nDias completados: ${habit.completedDays.join(', ')}'),
+              '${habit.descricao}\nDias completados: ${habit.completedDays.join(', ')}',
+              style: TextStyle(color: Colors.white), // Cor do subtítulo
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.edit, color: Colors.blue),
+                  icon: Icon(Icons.edit, color: Colors.white), // Cor do ícone de editar
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -70,10 +82,11 @@ class DiarioScreen extends ConsumerWidget {
                   value: habit.isCompleted,
                   onChanged: (bool? value) {
                     if (value != null) {
-                      final now = DateTime.now().day;
                       ref.read(habitProvider.notifier).toggleHabitCompletion(habit.id);
                     }
                   },
+                  checkColor: Colors.white, // Cor do ícone de check quando o item está completo
+                  activeColor: Colors.blue, // Cor do checkbox quando ativo
                 ),
               ],
             ),

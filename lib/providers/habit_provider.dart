@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:monitoramento_de_habitos/models/habit.dart';
 import 'package:monitoramento_de_habitos/utils/storage_service.dart';
@@ -23,6 +24,11 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
     _saveHabits();
   }
 
+  void removeHabits(List<String> ids) {
+    state = state.where((habit) => !ids.contains(habit.id)).toList();
+    _saveHabits();
+  }
+
   void toggleHabitCompletion(String id) {
     state = state.map((habit) {
       if (habit.id == id) {
@@ -36,7 +42,22 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
   Future<void> _saveHabits() async {
     await _storageService.saveHabits(state);
   }
+
+  List<Habit> getTodayHabits(DateTime today) {
+    final day = today.day;
+    return state.where((habit) {
+      if (habit.frequencia == Frequencia.diario) {
+        return true;
+      } else if (habit.frequencia == Frequencia.semanal) {
+        return habit.days.contains(today.weekday);
+      } else if (habit.frequencia == Frequencia.mensal) {
+        return habit.days.contains(day);
+      }
+      return false;
+    }).toList();
+  }
 }
+
 
 final storageServiceProvider = Provider((ref) => StorageService());
 
@@ -44,3 +65,17 @@ final habitProvider = StateNotifierProvider<HabitNotifier, List<Habit>>((ref) {
   final storageService = ref.watch(storageServiceProvider);
   return HabitNotifier(storageService);
 });
+
+final reminderCardProvider = StateProvider<bool>((ref) => false);
+
+final reminderLogicProvider = Provider<void>((ref) {
+  final habitNotifier = ref.watch(habitProvider.notifier);
+  final reminderCard = ref.watch(reminderCardProvider.notifier);
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final today = DateTime.now();
+    final todayHabits = habitNotifier.getTodayHabits(today);
+    reminderCard.state = todayHabits.isNotEmpty;
+  });
+});
+//MUDEI
