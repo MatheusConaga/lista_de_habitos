@@ -7,7 +7,6 @@ import 'package:monitoramento_de_habitos/screens/semanal.dart';
 import 'package:monitoramento_de_habitos/screens/mensal.dart';
 import 'package:monitoramento_de_habitos/screens/diario.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   @override
@@ -40,16 +39,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Monitoramento de Hábitos'),
-        backgroundColor: Colors.blue, // Cor de fundo da AppBar
-        foregroundColor: Colors.white, // Cor do texto da AppBar
-        centerTitle: true, // Centraliza o título
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Exibe o Card de lembrete se houver tarefas
+
               if (showReminderCard && todayHabits.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -75,7 +74,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: IconButton(
                             icon: Icon(Icons.close),
                             onPressed: () {
-                              // Oculta o card de lembrete
                               ref.read(reminderCardProvider.notifier).state = false;
                             },
                           ),

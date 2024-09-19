@@ -20,6 +20,7 @@ class MensalScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Hábitos Mensais', style: TextStyle(color: Colors.white)), // Cor do título da AppBar
         backgroundColor: Colors.blue, // Cor de fundo da AppBar
+        iconTheme: IconThemeData(color: Colors.white), // Define a cor do botão de voltar como branco
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white), // Cor do ícone na AppBar

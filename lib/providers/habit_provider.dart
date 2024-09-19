@@ -49,8 +49,10 @@ class HabitNotifier extends StateNotifier<List<Habit>> {
       if (habit.frequencia == Frequencia.diario) {
         return true;
       } else if (habit.frequencia == Frequencia.semanal) {
+        // Verifica se o hábito semanal deve ser realizado no dia da semana atual
         return habit.days.contains(today.weekday);
       } else if (habit.frequencia == Frequencia.mensal) {
+        // Verifica se o hábito mensal deve ser realizado no dia do mês atual
         return habit.days.contains(day);
       }
       return false;

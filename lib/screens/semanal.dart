@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:monitoramento_de_habitos/models/habit.dart';
 import 'package:monitoramento_de_habitos/providers/habit_provider.dart';
 import 'package:monitoramento_de_habitos/screens/add_habit_screen.dart'; // Importe a tela de adicionar/editar hábito
-import 'package:monitoramento_de_habitos/screens/habitDetailScreen.dart'; // Importe a tela de detalhes
+import 'package:monitoramento_de_habitos/screens/habitDetailScreen.dart';
 
 class SemanalScreen extends ConsumerWidget {
   const SemanalScreen({super.key});
@@ -18,6 +18,7 @@ class SemanalScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Hábitos Semanais', style: TextStyle(color: Colors.white)), // Cor do título da AppBar
         backgroundColor: Colors.blue, // Cor de fundo da AppBar
+        iconTheme: IconThemeData(color: Colors.white), // Define a cor do botão de voltar como branco
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Colors.white), // Cor do ícone na AppBar
